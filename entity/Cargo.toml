@@ -1,0 +1,13 @@
+[package]
+name = "entity"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+sea-orm = { version = "^0", features = ["postgres-array"] }
+serde = "1.0.163"
+async-graphql = "6.0.4"
+bigdecimal = { version = "0.3.1", features = ["serde"] }
+rand = "0.8.5"
+serde_json = "1.0.107"

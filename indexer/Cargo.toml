@@ -1,0 +1,32 @@
+[package]
+name = "indexer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-stream = "0.3.5"
+async-trait = "0.1.80"
+buildstructor = "0.5.4"
+chrono = "0.4.38"
+clap = { version = "4.5.8", features = ["derive"] }
+coingecko = "1.0.1"
+dotenv = "0.15.0"
+env_logger = "0.11.3"
+error-stack = "0.4.1"
+ethers = "2.0.14"
+futures = "0.3.30"
+futures-util = "0.3.30"
+hex = "0.4.3"
+log = "0.4.22"
+redis = "0.25.4"
+reqwest = { version = "0.12.5", features = ["blocking", "json"] }
+serde = { version = "1.0.203", features = ["derive"] }
+sea-orm = { version = "0.12.15", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid", "postgres-array"] }
+reqwest-middleware = "0.3.2"
+reqwest-retry = "0.6.0"
+serde_json = "1.0.120"
+serde_with = "3.8.2"
+serenity = "0.12.2"
+tokio = { version = "1.38.0", features = ["full", "rt"] }
+tokio-stream = { version = "0.1.15", features = ["sync"] }
+uuid = { version = "1.9.1", features = ["v4"] }

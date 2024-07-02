@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    ".",
+    "indexer",
+    "migration",
+    "entity",
+    "service"
+]
+resolver = "2"
+
+sea-orm = { version = "0.12.0", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid", "postgres-array"] }
+

@@ -2,10 +2,10 @@ use std::ops::Deref;
 
 use error_stack::{IntoReport, Result, ResultExt};
 use lib::error::Error;
-use redis::aio::Connection;
+use redis::aio::MultiplexedConnection;
 use redis::Client;
 
-use crate::config::service::RedisConfig;
+use crate::config::RedisConfig;
 
 #[derive(Clone)]
 pub struct CacheService(Client);
@@ -19,9 +19,9 @@ impl CacheService {
         Ok(CacheService(client))
     }
 
-    pub async fn get_connection(&self) -> Result<Connection, Error> {
+    pub async fn get_connection(&self) -> Result<MultiplexedConnection, Error> {
         self.0
-            .get_tokio_connection()
+            .get_multiplexed_tokio_connection()
             .await
             .into_report()
             .change_context(Error::RedisConnect)

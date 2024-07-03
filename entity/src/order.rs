@@ -17,7 +17,7 @@ pub struct Model {
     pub id: Uuid,
     pub name: String,
     pub product_id: Uuid,
-    pub bakery_id: i32,
+    pub bakery_id: Uuid,
     pub created_at: DateTime,
     pub updated_at: DateTime,
     pub active_at: Option<DateTime>,

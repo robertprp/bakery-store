@@ -67,4 +67,15 @@ impl StoreService {
             .await
             .change_context(Error::Store)
     }
+
+    pub async fn run_with_transaction(&self, f: impl FnOnce(&DatabaseTransaction) -> Result<(), Error>) -> Result<(), Error> {
+        let tx = self.begin_transaction().await?;
+        let result = f(&tx);
+        if result.is_ok() {
+            self.commit_transaction(tx).await?;
+        } else {
+            self.rollback_transaction(tx).await?;
+        }
+        result
+    }
 }

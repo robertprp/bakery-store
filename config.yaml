@@ -1,2 +1,14 @@
 database:
-  
+  servers:
+    - url: "postgresql://postgres:postgres@localhost:5433/bakery"
+      read_only: false
+    - url: "postgresql://postgres:postgres@localhost:5433/bakery"
+      read_only: true
+
+graphql:
+  listen: "127.0.0.1:8001"
+  endpoint: "http://localhost:8001"
+  subscription_endpoint: "ws://localhost:8001/ws"
+
+redis:
+  url: "redis://localhost:6379"

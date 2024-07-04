@@ -3,6 +3,7 @@ use error_stack::ResultExt;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseTransaction, EntityTrait, QueryOrder};
 use crate::store::service::StoreService;
 use entity::{bakery};
+use lib::entity::opt_to_active_value_opt;
 use lib::error::Error;
 use crate::bakery::dto::CreateBakeryDTO;
 
@@ -15,11 +16,13 @@ impl BakeryRepository {
 
     pub async fn create(&self, dto: CreateBakeryDTO, db_tx: &DatabaseTransaction) -> error_stack::Result<bakery::Model, Error> {
         let now = chrono::Utc::now().naive_utc();
+        let active_at = Option::from(dto.active_at.unwrap().naive_utc());
         let bakery = bakery::ActiveModel {
             id: ActiveValue::Set(uuid::Uuid::new_v4()),
             name: ActiveValue::Set(dto.name),
             created_at: ActiveValue::Set(now),
             updated_at: ActiveValue::Set(now),
+            active_at: opt_to_active_value_opt(active_at),
             ..Default::default()
         };
 

@@ -58,7 +58,7 @@ impl ColumnTrait for Column {
             Self::Id => ColumnType::Uuid.def(),
             Self::Name => ColumnType::String(None).def(),
             Self::ProductId => ColumnType::Uuid.def(),
-            Self::BakeryId => ColumnType::Integer.def(),
+            Self::BakeryId => ColumnType::Uuid.def(),
             Self::CreatedAt => ColumnType::DateTime.def(),
             Self::UpdatedAt => ColumnType::DateTime.def(),
             Self::ActiveAt => ColumnType::DateTime.def().null(),

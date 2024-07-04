@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use error_stack::ResultExt;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryOrder};
 use uuid::Uuid;
@@ -6,7 +5,7 @@ use crate::store::service::StoreService;
 use entity::{order};
 use lib::entity::{opt_to_active_value, opt_to_active_value_opt};
 use lib::error::Error;
-use crate::order::dto::CreateOrderDTO;
+use crate::order::dto::{CreateOrderDTO, UpdateOrderDTO};
 
 pub struct OrderRepository(StoreService);
 
@@ -16,25 +15,40 @@ impl OrderRepository {
     }
 
     pub async fn create(&self, dto: CreateOrderDTO) -> error_stack::Result<order::Model, Error> {
-        let now = chrono::Utc::now().naive_utc();
         let id = Uuid::new_v4();
         let name = dto.name;
         let product_id = dto.product_id;
         let bakery_id = dto.bakery_id;
 
         let order = order::ActiveModel {
+            id: ActiveValue::Set(id),
             name: ActiveValue::Set(name),
             product_id: ActiveValue::Set(product_id),
             bakery_id: ActiveValue::Set(bakery_id),
-            created_at: ActiveValue::Set(now),
-            updated_at: ActiveValue::Set(now),
             ..Default::default()
         };
-        let model = dto.insert(self.store().write()).await.change_context(Error::Store)?;
+
+        let model = order.insert(self.store().write()).await.change_context(Error::Store)?;
 
         // should broadcast created model
         Ok(model)
     }
+
+    pub async fn update(&self, dto: UpdateOrderDTO) -> error_stack::Result<order::Model, Error> {
+        let order = order::ActiveModel {
+            name: opt_to_active_value(dto.name),
+            price: opt_to_active_value(dto.price),
+            quantity: opt_to_active_value(dto.quantity),
+            product_id: opt_to_active_value(dto.product_id),
+            bakery_id: opt_to_active_value(dto.bakery_id),
+            ..Default::default()
+        };
+        let model = order.update(self.store().write()).await.change_context(Error::Store)?;
+
+        // should broadcast updated model
+        Ok(model)
+    }
+
     pub async fn find_all(&self) -> error_stack::Result<Vec<order::Model>, Error> {
         order::Entity::find()
             .order_by_desc(order::Column::UpdatedAt)

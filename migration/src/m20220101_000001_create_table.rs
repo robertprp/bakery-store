@@ -1,4 +1,5 @@
 use sea_orm_migration::prelude::*;
+use crate::ColumnType::Uuid;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -30,7 +31,6 @@ impl MigrationTrait for Migration {
                             .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
                             .not_null(),
                     )
-                    .col(ColumnDef::new(Bakery::ActiveAt).timestamp())
                     .col(ColumnDef::new(Bakery::DeletedAt).timestamp())
                     .to_owned(),
             )
@@ -46,15 +46,10 @@ impl MigrationTrait for Migration {
                         .not_null()
                         .primary_key(),
                 )
-                .col(ColumnDef::new(Order::Name).string().not_null())
-                .col(
-                    ColumnDef::new(Order::ProductId)
-                        .uuid()
-                        .not_null()
-                )
+                .col(ColumnDef::new(Order::Price).decimal().not_null())
                 .col(
                     ColumnDef::new(Order::BakeryId)
-                        .integer()
+                        .uuid()
                         .not_null()
                 )
                 .col(
@@ -69,7 +64,6 @@ impl MigrationTrait for Migration {
                         .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
                         .not_null(),
                 )
-                .col(ColumnDef::new(Order::ActiveAt).timestamp())
                 .col(ColumnDef::new(Order::DeletedAt).timestamp())
                 .to_owned(),
         ).await?;
@@ -103,12 +97,72 @@ impl MigrationTrait for Migration {
                 .to_owned(),
         ).await?;
 
-        manager.create_index(
-            Index::create()
-                .table(Order::Table)
-                .name("order_product_id_idx")
-                .col(Order::ProductId)
-                .unique()
+        manager.create_table(
+            Table::create()
+                .table(OrderProduct::Table)
+                .if_not_exists()
+                .col(
+                    ColumnDef::new(OrderProduct::Id)
+                        .uuid()
+                        .not_null()
+                        .primary_key(),
+                )
+                .col(
+                    ColumnDef::new(OrderProduct::OrderId)
+                        .uuid()
+                        .not_null()
+                )
+                .col(
+                    ColumnDef::new(OrderProduct::ProductId)
+                        .uuid()
+                        .not_null()
+                )
+                .col(ColumnDef::new(OrderProduct::Quantity).integer().not_null())
+                .col(
+                    ColumnDef::new(OrderProduct::CreatedAt)
+                        .timestamp()
+                        .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
+                        .not_null(),
+                )
+                .col(
+                    ColumnDef::new(OrderProduct::UpdatedAt)
+                        .timestamp()
+                        .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
+                        .not_null(),
+                )
+                .col(ColumnDef::new(OrderProduct::DeletedAt).timestamp())
+                .to_owned(),
+        ).await?;
+
+        manager.create_table(
+            Table::create()
+                .table(Stock::Table)
+                .if_not_exists()
+                .col(
+                    ColumnDef::new(Stock::Id)
+                        .uuid()
+                        .not_null()
+                        .primary_key(),
+                )
+                .col(
+                    ColumnDef::new(Stock::ProductId)
+                        .uuid()
+                        .not_null()
+                )
+                .col(ColumnDef::new(Stock::Quantity).integer().not_null())
+                .col(
+                    ColumnDef::new(Stock::CreatedAt)
+                        .timestamp()
+                        .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
+                        .not_null(),
+                )
+                .col(
+                    ColumnDef::new(Stock::UpdatedAt)
+                        .timestamp()
+                        .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
+                        .not_null(),
+                )
+                .col(ColumnDef::new(Stock::DeletedAt).timestamp())
                 .to_owned(),
         ).await?;
 
@@ -140,20 +194,40 @@ enum Bakery {
     UpdatedAt,
     CreatedAt,
     DeletedAt,
-    ActiveAt,
 }
 
 #[derive(DeriveIden)]
 enum Order {
     Table,
     Id,
-    Name,
-    ProductId,
+    Price,
     BakeryId,
     UpdatedAt,
     CreatedAt,
     DeletedAt,
-    ActiveAt,
+}
+
+#[derive(DeriveIden)]
+enum OrderProduct {
+    Table,
+    Id,
+    OrderId,
+    ProductId,
+    Quantity,
+    UpdatedAt,
+    CreatedAt,
+    DeletedAt,
+}
+
+#[derive(DeriveIden)]
+enum Stock {
+    Table,
+    Id,
+    ProductId,
+    Quantity,
+    UpdatedAt,
+    CreatedAt,
+    DeletedAt,
 }
 
 #[derive(DeriveIden)]

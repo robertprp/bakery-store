@@ -5,4 +5,6 @@ pub mod prelude;
 pub mod bakery;
 pub mod event_message;
 pub mod order;
+pub mod order_product;
 pub mod product;
+pub mod stock;

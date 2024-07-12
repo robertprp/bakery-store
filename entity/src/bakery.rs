@@ -18,7 +18,6 @@ pub struct Model {
     pub name: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
-    pub active_at: Option<DateTime>,
     pub deleted_at: Option<DateTime>,
 }
 
@@ -28,7 +27,6 @@ pub enum Column {
     Name,
     CreatedAt,
     UpdatedAt,
-    ActiveAt,
     DeletedAt,
 }
 
@@ -55,7 +53,6 @@ impl ColumnTrait for Column {
             Self::Name => ColumnType::String(None).def(),
             Self::CreatedAt => ColumnType::DateTime.def(),
             Self::UpdatedAt => ColumnType::DateTime.def(),
-            Self::ActiveAt => ColumnType::DateTime.def().null(),
             Self::DeletedAt => ColumnType::DateTime.def().null(),
         }
     }

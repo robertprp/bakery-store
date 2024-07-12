@@ -15,15 +15,11 @@ impl OrderRepository {
     }
 
     pub async fn create(&self, dto: CreateOrderDTO) -> error_stack::Result<order::Model, Error> {
-        let id = Uuid::new_v4();
-        let name = dto.name;
-        let product_id = dto.product_id;
         let bakery_id = dto.bakery_id;
 
         let order = order::ActiveModel {
-            id: ActiveValue::Set(id),
-            name: ActiveValue::Set(name),
-            product_id: ActiveValue::Set(product_id),
+            id: ActiveValue::Set(Uuid::new_v4()),
+            price: ActiveValue::Set(dto.price),
             bakery_id: ActiveValue::Set(bakery_id),
             ..Default::default()
         };
@@ -36,11 +32,8 @@ impl OrderRepository {
 
     pub async fn update(&self, dto: UpdateOrderDTO) -> error_stack::Result<order::Model, Error> {
         let order = order::ActiveModel {
-            name: opt_to_active_value(dto.name),
-            price: opt_to_active_value(dto.price),
-            quantity: opt_to_active_value(dto.quantity),
-            product_id: opt_to_active_value(dto.product_id),
             bakery_id: opt_to_active_value(dto.bakery_id),
+            price: opt_to_active_value(dto.price),
             ..Default::default()
         };
         let model = order.update(self.store().write()).await.change_context(Error::Store)?;
@@ -59,7 +52,6 @@ impl OrderRepository {
 
     pub async fn find_all_active(&self) -> error_stack::Result<Vec<order::Model>, Error> {
         order::Entity::find()
-            .filter(order::Column::ActiveAt.is_not_null())
             .filter(order::Column::DeletedAt.lt(chrono::Utc::now().naive_utc()))
             .order_by_desc(order::Column::UpdatedAt)
             .all(self.store().read())
@@ -67,21 +59,21 @@ impl OrderRepository {
             .change_context(Error::Store)
     }
 
-    pub async fn find_by_product_id(&self, product_id: Uuid) -> error_stack::Result<Vec<order::Model>, Error> {
+    pub async fn find_by_bakery_id(&self, bakery_id: Uuid) -> error_stack::Result<Vec<order::Model>, Error> {
         order::Entity::find()
-            .filter(order::Column::ProductId.eq(product_id))
+            .filter(order::Column::BakeryId.eq(bakery_id))
             .all(self.store().read())
             .await
             .change_context(Error::Store)
     }
 
-    pub async fn mark_as_deleted(&self, order: order::Model) -> error_stack::Result<(), Error> {
+    pub async fn mark_as_deleted(&self, order: order::Model) -> error_stack::Result<order::Model, Error> {
         let mut active_model = order::ActiveModel::from(order);
         active_model.deleted_at = opt_to_active_value_opt(Some(chrono::Utc::now().naive_utc()));
         let model = active_model.update(self.store().write()).await.change_context(Error::Store)?;
 
         // should broadcast updated model
-        Ok(())
+        Ok(model)
     }
 
 

@@ -3,4 +3,6 @@
 pub use super::bakery::Entity as Bakery;
 pub use super::event_message::Entity as EventMessage;
 pub use super::order::Entity as Order;
+pub use super::order_product::Entity as OrderProduct;
 pub use super::product::Entity as Product;
+pub use super::stock::Entity as Stock;

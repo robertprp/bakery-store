@@ -7,3 +7,5 @@ mod order;
 mod product;
 mod event_queue;
 mod message_broker;
+mod order_product;
+mod stock;

@@ -19,8 +19,8 @@ pub struct Model {
     pub price: Decimal,
     pub created_at: DateTime,
     pub updated_at: DateTime,
-    pub active_at: Option<DateTime>,
     pub deleted_at: Option<DateTime>,
+    pub active_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
@@ -30,8 +30,8 @@ pub enum Column {
     Price,
     CreatedAt,
     UpdatedAt,
-    ActiveAt,
     DeletedAt,
+    ActiveAt,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
@@ -58,8 +58,8 @@ impl ColumnTrait for Column {
             Self::Price => ColumnType::Decimal(None).def(),
             Self::CreatedAt => ColumnType::DateTime.def(),
             Self::UpdatedAt => ColumnType::DateTime.def(),
-            Self::ActiveAt => ColumnType::DateTime.def().null(),
             Self::DeletedAt => ColumnType::DateTime.def().null(),
+            Self::ActiveAt => ColumnType::DateTime.def().null(),
         }
     }
 }

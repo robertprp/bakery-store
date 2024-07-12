@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use chrono::Utc;
 use error_stack::ResultExt;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseTransaction, EntityTrait, QueryOrder};
 use crate::store::service::StoreService;
@@ -15,14 +16,9 @@ impl BakeryRepository {
     }
 
     pub async fn create(&self, dto: CreateBakeryDTO, db_tx: &DatabaseTransaction) -> error_stack::Result<bakery::Model, Error> {
-        let now = chrono::Utc::now().naive_utc();
-        let active_at = Option::from(dto.active_at.unwrap().naive_utc());
         let bakery = bakery::ActiveModel {
             id: ActiveValue::Set(uuid::Uuid::new_v4()),
             name: ActiveValue::Set(dto.name),
-            created_at: ActiveValue::Set(now),
-            updated_at: ActiveValue::Set(now),
-            active_at: opt_to_active_value_opt(active_at),
             ..Default::default()
         };
 
@@ -32,20 +28,38 @@ impl BakeryRepository {
         Ok(model)
     }
 
+    pub async fn mark_as_deleted(&self, id: uuid::Uuid, db_tx: &DatabaseTransaction) -> error_stack::Result<bakery::Model, Error> {
+        let model = bakery::ActiveModel {
+            id: ActiveValue::Set(id),
+            deleted_at: opt_to_active_value_opt(Some(Utc::now().naive_utc())),
+            ..Default::default()
+        };
+
+        model.update(db_tx).await.change_context(Error::Store)
+    }
+
     pub async fn find_all(&self) -> error_stack::Result<Vec<bakery::Model>, Error> {
         bakery::Entity::find()
+            .filter(bakery::Column::DeletedAt.is_null())
             .order_by_desc(bakery::Column::UpdatedAt)
             .all(self.store().read())
             .await
             .change_context(Error::Store)
     }
 
-    pub async fn find_all_active(&self) -> error_stack::Result<Vec<bakery::Model>, Error> {
+    pub async fn find_all_deleted(&self) -> error_stack::Result<Vec<bakery::Model>, Error> {
         bakery::Entity::find()
-            .filter(bakery::Column::ActiveAt.is_not_null())
-            .filter(bakery::Column::DeletedAt.lt(chrono::Utc::now().naive_utc()))
+            .filter(bakery::Column::DeletedAt.not_eq(None))
             .order_by_desc(bakery::Column::UpdatedAt)
             .all(self.store().read())
+            .await
+            .change_context(Error::Store)
+    }
+
+    pub async fn find_by_id(&self, id: uuid::Uuid) -> error_stack::Result<Option<bakery::Model>, Error> {
+        bakery::Entity::find()
+            .filter(bakery::Column::Id.eq(id))
+            .one(self.store().read())
             .await
             .change_context(Error::Store)
     }

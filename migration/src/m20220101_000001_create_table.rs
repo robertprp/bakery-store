@@ -38,38 +38,6 @@ impl MigrationTrait for Migration {
 
         manager.create_table(
             Table::create()
-                .table(Order::Table)
-                .if_not_exists()
-                .col(
-                    ColumnDef::new(Order::Id)
-                        .uuid()
-                        .not_null()
-                        .primary_key(),
-                )
-                .col(ColumnDef::new(Order::Price).decimal().not_null())
-                .col(
-                    ColumnDef::new(Order::BakeryId)
-                        .uuid()
-                        .not_null()
-                )
-                .col(
-                    ColumnDef::new(Order::CreatedAt)
-                        .timestamp()
-                        .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
-                        .not_null(),
-                )
-                .col(
-                    ColumnDef::new(Order::UpdatedAt)
-                        .timestamp()
-                        .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
-                        .not_null(),
-                )
-                .col(ColumnDef::new(Order::DeletedAt).timestamp())
-                .to_owned(),
-        ).await?;
-
-        manager.create_table(
-            Table::create()
                 .table(Product::Table)
                 .if_not_exists()
                 .col(
@@ -92,8 +60,36 @@ impl MigrationTrait for Migration {
                         .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
                         .not_null(),
                 )
-                .col(ColumnDef::new(Product::ActiveAt).timestamp())
                 .col(ColumnDef::new(Product::DeletedAt).timestamp())
+                .col(ColumnDef::new(Product::ActiveAt).timestamp())
+                .to_owned(),
+        ).await?;
+
+        manager.create_table(
+            Table::create()
+                .table(Order::Table)
+                .if_not_exists()
+                .col(
+                    ColumnDef::new(Order::Id)
+                        .uuid()
+                        .not_null()
+                        .primary_key(),
+                )
+                .col(ColumnDef::new(Order::Price).decimal().not_null())
+                .col(ColumnDef::new(Order::BakeryId).uuid().not_null())
+                .col(
+                    ColumnDef::new(Order::CreatedAt)
+                        .timestamp()
+                        .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
+                        .not_null(),
+                )
+                .col(
+                    ColumnDef::new(Order::UpdatedAt)
+                        .timestamp()
+                        .default(SimpleExpr::Keyword(Keyword::CurrentTimestamp))
+                        .not_null(),
+                )
+                .col(ColumnDef::new(Order::DeletedAt).timestamp())
                 .to_owned(),
         ).await?;
 
@@ -107,17 +103,10 @@ impl MigrationTrait for Migration {
                         .not_null()
                         .primary_key(),
                 )
-                .col(
-                    ColumnDef::new(OrderProduct::OrderId)
-                        .uuid()
-                        .not_null()
-                )
-                .col(
-                    ColumnDef::new(OrderProduct::ProductId)
-                        .uuid()
-                        .not_null()
-                )
-                .col(ColumnDef::new(OrderProduct::Quantity).integer().not_null())
+                .col(ColumnDef::new(OrderProduct::OrderId).uuid().not_null())
+                .col(ColumnDef::new(OrderProduct::ProductId).uuid().not_null())
+                .col(ColumnDef::new(OrderProduct::Quantity).decimal().not_null())
+                .col(ColumnDef::new(OrderProduct::TotalPrice).decimal().not_null())
                 .col(
                     ColumnDef::new(OrderProduct::CreatedAt)
                         .timestamp()
@@ -149,7 +138,7 @@ impl MigrationTrait for Migration {
                         .uuid()
                         .not_null()
                 )
-                .col(ColumnDef::new(Stock::Quantity).integer().not_null())
+                .col(ColumnDef::new(Stock::Quantity).decimal().not_null())
                 .col(
                     ColumnDef::new(Stock::CreatedAt)
                         .timestamp()
@@ -168,9 +157,9 @@ impl MigrationTrait for Migration {
 
         manager.create_index(
             Index::create()
-                .table(Order::Table)
-                .name("order_bakery_id_idx")
-                .col(Order::BakeryId)
+                .table(OrderProduct::Table)
+                .name("order_product_idx")
+                .col(OrderProduct::ProductId)
                 .unique()
                 .to_owned(),
         ).await?;
@@ -214,6 +203,7 @@ enum OrderProduct {
     OrderId,
     ProductId,
     Quantity,
+    TotalPrice,
     UpdatedAt,
     CreatedAt,
     DeletedAt,

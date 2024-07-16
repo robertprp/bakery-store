@@ -9,17 +9,20 @@ use serde::{Deserialize, Deserializer, Serialize};
 use lib::error::Error;
 use crate::config::database::DatabaseConfig;
 use crate::config::gql::GQLConfig;
+use crate::config::jwt::JWTConfig;
 use crate::config::redis::RedisConfig;
 
 pub mod database;
 pub mod gql;
 pub mod redis;
+pub mod jwt;
 
 #[derive(Debug, Serialize)]
 pub struct ConfigServiceInner {
     pub database: DatabaseConfig,
     pub redis: RedisConfig,
     pub graphql: GQLConfig,
+    pub jwt: JWTConfig
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -35,6 +38,7 @@ impl <'de> Deserialize<'de> for ConfigService {
             pub database: DatabaseConfig,
             pub redis: RedisConfig,
             pub graphql: GQLConfig,
+            pub jwt: JWTConfig
         }
 
         let ad_hoc: AdHocConfig = serde::Deserialize::deserialize(deserialize)?;
@@ -57,11 +61,12 @@ impl FromStr for ConfigService {
 #[buildstructor::buildstructor]
 impl ConfigService {
     #[builder]
-    pub fn new(database: DatabaseConfig, redis: RedisConfig, graphql: GQLConfig) -> Result<Self, Error> {
+    pub fn new(database: DatabaseConfig, redis: RedisConfig, graphql: GQLConfig, jwt: JWTConfig) -> Result<Self, Error> {
         let inner_config = ConfigServiceInner {
             database,
             redis,
             graphql,
+            jwt,
         };
 
         Ok(ConfigService(Arc::new(inner_config)))

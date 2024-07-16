@@ -12,3 +12,7 @@ graphql:
 
 redis:
   url: "redis://localhost:6379"
+
+jwt:
+  public_key: "fill"
+  private_key: "Fill"

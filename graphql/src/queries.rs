@@ -8,5 +8,4 @@ impl Query {
 
     async fn hello(&self) -> &'static str { "Hello, world!" }
 
-
 }

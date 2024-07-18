@@ -1,1 +1,4 @@
-pub mod bakery;
+mod bakery;
+mod stock;
+mod product;
+mod order;

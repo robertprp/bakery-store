@@ -13,7 +13,6 @@ use crate::{
 };
 use async_graphql::{Schema};
 use service::services::Services;
-use uuid::Uuid;
 
 pub type ServiceSchema = Schema<Query, Mutation, Subscription>;
 
@@ -23,14 +22,7 @@ pub struct GQLGlobalData {
     pub jwt: JWT,
 }
 
-#[derive(Clone)]
-pub struct OrganizationId(pub Uuid);
-
-impl From<String> for OrganizationId {
-    fn from(id: String) -> Self {
-        Self(Uuid::from_str(&id).unwrap())
-    }
-}
+impl juniper::Context for GQLGlobalData {}
 
 pub struct GQLJWTData {
     pub claims: Option<Claims>,

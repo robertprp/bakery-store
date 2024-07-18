@@ -5,18 +5,14 @@ use axum::{
     http::HeaderMap,
     response::{Html, IntoResponse, Response},
     routing::get,
-    Router, Server as AxumServer,
+    Router, serve,
 };
-use error_stack::{IntoReport, Result, ResultExt};
+use error_stack::{Result, ResultExt};
 use lib::error::Error;
 use log::{info, warn};
 use serde::Deserialize;
 use service::{
-    broadcast::service::BroadcastService,
-    config::{
-        extra::{styled_info, styled_logo},
-        service::ConfigService,
-    },
+    message_broker::service::MessageBrokerService as BroadcastService,
     services::Services,
     state::service::StateService,
     store::service::StoreService,
@@ -31,12 +27,6 @@ use crate::{
     schema::{new_schema, GQLGlobalData},
     LOG_TARGET,
 };
-
-#[derive(Clone)]
-pub struct GQLGlobalData {
-    pub services: Services,
-    pub jwt: JWT,
-}
 
 #[derive(Clone)]
 struct AppState {
@@ -89,8 +79,8 @@ impl Server {
         let services = Services {
             config: self.config.clone(),
             store: store.clone(),
-            broadcast: BroadcastService::new(LOG_TARGET, self.config.redis.clone()).await?,
-            state: StateService::new(store.clone()),
+            message_broker: BroadcastService::new(LOG_TARGET, self.config.redis.clone()).await?,
+            // state: StateService::new(store.clone()),
             cache: CacheService::new(self.config.redis.clone())?,
             event_queue: EventQueueService::new(LOG_TARGET, store.clone()),
         };

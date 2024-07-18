@@ -36,3 +36,4 @@ tower-http = { version = "0.5.2", features = ["cors"] }
 tower = "0.4.13"
 slug = "0.1.5"
 regex = "1.10.2"
+rust_decimal = "1.35.0"

@@ -1,17 +1,29 @@
 use async_graphql::Object;
+use bigdecimal::ToPrimitive;
+use entity::stock;
 use crate::helpers::date::DateTimeHelper;
+use sea_orm::prelude::Decimal;
 
-#[derive(Clone)]
-struct BakeryType(pub entity::bakery::Model);
+pub struct StockType(stock::Model);
+
+impl From<stock::Model> for StockType {
+    fn from(value: stock::Model) -> Self {
+        StockType(value)
+    }
+}
 
 #[Object]
-impl BakeryType {
+impl StockType {
     async fn id(&self) -> String {
         format!("{:#x}", self.0.id)
     }
 
-    async fn name(&self) -> &str {
-        &self.0.name
+    async fn product_id(&self) -> &str {
+        self.0.product_id.as_str()
+    }
+
+    async fn quantity(&self) -> Decimal {
+        self.0.quantity
     }
 
     async fn created_at(&self) -> String {

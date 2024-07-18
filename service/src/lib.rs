@@ -1,11 +1,11 @@
 pub mod config;
 pub mod services;
 pub mod cache;
-mod store;
+pub mod store;
 mod bakery;
 mod order;
 mod product;
-mod event_queue;
-mod message_broker;
+pub mod event_queue;
+pub mod message_broker;
 mod order_product;
 mod stock;

@@ -2526,6 +2526,7 @@ dependencies = [
  "redis",
  "redis-macros",
  "regex",
+ "rust_decimal",
  "sea-orm",
  "serde",
  "serde_json",

@@ -1,17 +1,23 @@
 use async_graphql::Object;
-use crate::helpers::date::DateTimeHelper;
 
-#[derive(Clone)]
-struct BakeryType(pub entity::bakery::Model);
+pub struct OrderType(entity::order::Model);
 
 #[Object]
-impl BakeryType {
+impl OrderType {
     async fn id(&self) -> String {
         format!("{:#x}", self.0.id)
     }
 
-    async fn name(&self) -> &str {
-        &self.0.name
+    async fn bakery_id(&self) -> String {
+        format!("{:#x}", self.0.bakery_id)
+    }
+
+    async fn product_id(&self) -> String {
+        format!("{:#x}", self.0.product_id)
+    }
+
+    async fn quantity(&self) -> i32 {
+        self.0.quantity
     }
 
     async fn created_at(&self) -> String {

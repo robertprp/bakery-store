@@ -5,7 +5,7 @@ mod schema;
 mod queries;
 mod mutations;
 mod subscriptions;
-mod types;
+mod ide;
 
 use std::path::Path;
 use clap::Parser;

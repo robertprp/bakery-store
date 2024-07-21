@@ -2,7 +2,7 @@ use async_graphql::Object;
 use crate::helpers::date::DateTimeHelper;
 
 #[derive(Clone)]
-struct BakeryType(pub entity::bakery::Model);
+pub(crate) struct BakeryType(pub entity::bakery::Model);
 
 #[Object]
 impl BakeryType {

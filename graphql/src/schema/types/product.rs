@@ -1,9 +1,16 @@
 use async_graphql::Object;
 use rust_decimal::Decimal;
+use entity::order;
+use entity::order::Model;
 use crate::helpers::date::DateTimeHelper;
 
 pub struct ProductType(entity::product::Model);
 
+impl From<entity::product::Model> for ProductType {
+    fn from(value: entity::product::Model) -> Self {
+        ProductType(value)
+    }
+}
 #[Object]
 impl ProductType {
     async fn id(&self) -> String {

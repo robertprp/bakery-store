@@ -1,6 +1,18 @@
 use async_graphql::Object;
+use rust_decimal::Decimal;
+use uuid::Uuid;
+use entity::order;
+use entity::order::Model;
+use crate::helpers::date::DateTimeHelper;
 
+#[derive(Clone)]
 pub struct OrderType(entity::order::Model);
+
+impl From<order::Model> for OrderType {
+    fn from(value: Model) -> Self {
+        OrderType(value)
+    }
+}
 
 #[Object]
 impl OrderType {
@@ -8,16 +20,12 @@ impl OrderType {
         format!("{:#x}", self.0.id)
     }
 
-    async fn bakery_id(&self) -> String {
-        format!("{:#x}", self.0.bakery_id)
+    async fn bakery_id(&self) -> Uuid {
+        self.0.bakery_id
     }
 
-    async fn product_id(&self) -> String {
-        format!("{:#x}", self.0.product_id)
-    }
-
-    async fn quantity(&self) -> i32 {
-        self.0.quantity
+    async fn price(&self) -> Decimal {
+        self.0.price
     }
 
     async fn created_at(&self) -> String {

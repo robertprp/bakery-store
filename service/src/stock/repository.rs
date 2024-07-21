@@ -15,13 +15,13 @@ impl StockRepository {
     }
 
     pub async fn find_all(&self) -> error_stack::Result<Vec<stock::Model>, Error> {
-        let stocks = stock::Entity::find().all(self.store().read()).await.change_context(Error::Store)?;
+        let stocks = stock::Entity::find().all(self.0.read()).await.change_context(Error::Store)?;
         Ok(stocks)
     }
 
     pub async fn find_by_id(&self, id: Uuid) -> error_stack::Result<Option<stock::Model>, Error> {
         let stock = stock::Entity::find_by_id(id)
-            .find_opt(self.store().read())
+            .find_opt(self.0.read())
             .await
             .change_context(Error::Store)?;
         Ok(stock)
@@ -35,7 +35,7 @@ impl StockRepository {
             ..Default::default()
         };
 
-        let model = stock.insert(self.store().write()).await.change_context(Error::Store)?;
+        let model = stock.insert(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast created model
         Ok(model)
@@ -47,7 +47,7 @@ impl StockRepository {
             quantity: opt_to_active_value(dto.quantity),
             ..Default::default()
         };
-        let model = stock.update(self.store().write()).await.change_context(Error::Store)?;
+        let model = stock.update(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast updated model
         Ok(model)

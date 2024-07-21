@@ -6,7 +6,6 @@ use log::info;
 use sea_orm::{ActiveEnum, ActiveModelTrait, ActiveValue, DatabaseTransaction};
 use serde::{Deserialize, Serialize};
 use tokio::task::JoinHandle;
-use entity::event_message;
 use entity::event_message::{EventMessageStatus, EventMessageType};
 use entity::prelude::EventMessage;
 use lib::error::Error;
@@ -155,7 +154,7 @@ pub async fn handle_events(services: Services, shutdown: Arc<AtomicBool>) -> Joi
                             let order_service = OrderService::new(services.store.clone());
                             services.order_service.handle_order_created(event).await
                         }
-                    }
+                    };
 
                     event_queue_service.update_status(&message, EventMessageStatus::Processed).await.unwrap();
                 }

@@ -29,7 +29,7 @@ bigdecimal = { version = "0.4.2", features = ["serde"] }
 twitter-v2 = "0.1.8"
 redis = { version = "0.25.4", features = ["aio", "connection-manager", "tokio-comp"] }
 redis-macros = "0.3.0"
-axum = { version = "0.7.5", features = ["ws"] }
+axum = { version = "0.7.5", features = ["macros", "ws"] }
 async-graphql-axum = "7.0.6"
 tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
 tower-http = { version = "0.5.2", features = ["cors"] }

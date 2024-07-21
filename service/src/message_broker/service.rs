@@ -6,7 +6,6 @@ use log::{info, warn};
 use redis::aio::ConnectionManager;
 use redis::{AsyncCommands, Client, Msg};
 use serde::Serialize;
-use tokio_stream::StreamExt;
 use tokio_stream::wrappers::BroadcastStream;
 use entity::{bakery, order, product, stock};
 use lib::error::Error;

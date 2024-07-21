@@ -1,3 +1,6 @@
+use std::net::{Shutdown, TcpListener};
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use async_graphql::{http::ALL_WEBSOCKET_PROTOCOLS, Data, ServerError};
 use async_graphql_axum::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLWebSocket};
 use axum::{
@@ -7,6 +10,7 @@ use axum::{
     routing::get,
     Router, serve,
 };
+use axum::handler::HandlerWithoutStateExt;
 use error_stack::{Result, ResultExt};
 use lib::error::Error;
 use log::{info, warn};
@@ -14,11 +18,10 @@ use serde::Deserialize;
 use service::{
     message_broker::service::MessageBrokerService as BroadcastService,
     services::Services,
-    state::service::StateService,
     store::service::StoreService,
 };
 use service::{cache::service::CacheService, event_queue::service::EventQueueService};
-use tower::ServiceBuilder;
+use tower::{MakeService, ServiceBuilder};
 use tower_http::cors;
 use service::config::ConfigService;
 use crate::schema::{GQLJWTData, ServiceSchema};
@@ -27,6 +30,7 @@ use crate::{
     schema::{new_schema, GQLGlobalData},
     LOG_TARGET,
 };
+use crate::ide::altair::AltairGraphQL;
 
 #[derive(Clone)]
 struct AppState {
@@ -120,11 +124,11 @@ impl Server {
                     .into_inner(),
             );
 
-        AxumServer::bind(&self.config.graphql.listen.parse().unwrap())
-            .serve(app.into_make_service())
+        let listener = tokio::net::TcpListener::bind(&self.config.graphql.listen.parse().unwrap()).await.unwrap();
+        let app_service = app.into_make_service();
+        axum::serve(listener, app_service)
             .await
-            .into_report()
-            .change_context(Error::Unknown)?;
+            .unwrap();
 
         Ok(())
     }
@@ -229,11 +233,6 @@ async fn graphql_handler(
         }
     }
 
-    // Add organization ID to the request if it's present in the headers
-    if let Some(organization_id) = get_organization_header(&headers) {
-        request = request.data(OrganizationId::from(organization_id));
-    }
-
     state.schema.execute(request).await.into()
 
     // state.schema.execute_batch(request.into()).await.into()
@@ -244,7 +243,7 @@ async fn graphql_playground(State(state): State<AppState>) -> impl IntoResponse 
         AltairGraphQL::build()
             .endpoint(&state.config.graphql.endpoint)
             .subscription_endpoint(&state.config.graphql.subscription_endpoint)
-            .title("Valio GQL Explorer")
+            .title("Bakery GQL Explorer")
             .finish(),
     )
 }

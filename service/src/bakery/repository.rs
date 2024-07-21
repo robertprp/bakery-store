@@ -42,7 +42,7 @@ impl BakeryRepository {
         bakery::Entity::find()
             .filter(bakery::Column::DeletedAt.is_null())
             .order_by_desc(bakery::Column::UpdatedAt)
-            .all(self.store().read())
+            .all(self.0.read())
             .await
             .change_context(Error::Store)
     }
@@ -51,7 +51,7 @@ impl BakeryRepository {
         bakery::Entity::find()
             .filter(bakery::Column::DeletedAt.not_eq(None))
             .order_by_desc(bakery::Column::UpdatedAt)
-            .all(self.store().read())
+            .all(self.0.read())
             .await
             .change_context(Error::Store)
     }
@@ -59,7 +59,7 @@ impl BakeryRepository {
     pub async fn find_by_id(&self, id: uuid::Uuid) -> error_stack::Result<Option<bakery::Model>, Error> {
         bakery::Entity::find()
             .filter(bakery::Column::Id.eq(id))
-            .one(self.store().read())
+            .one(self.0.read())
             .await
             .change_context(Error::Store)
     }

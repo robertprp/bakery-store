@@ -15,13 +15,13 @@ impl ProductRepository {
     }
 
     pub async fn find_all(&self) -> error_stack::Result<Vec<product::Model>, Error> {
-        let products = product::Entity::find().all(self.store().read()).await.change_context(Error::Store)?;
+        let products = product::Entity::find().all(self.0.read()).await.change_context(Error::Store)?;
         Ok(products)
     }
 
     pub async fn find_by_id(&self, id: Uuid) -> error_stack::Result<Option<product::Model>, Error> {
         let product = product::Entity::find_by_id(id)
-            .find_opt(self.store().read())
+            .find_opt(self.0.read())
             .await
             .change_context(Error::Store)?;
         Ok(product)
@@ -36,7 +36,7 @@ impl ProductRepository {
             ..Default::default()
         };
 
-        let model = product.insert(self.store().write()).await.change_context(Error::Store)?;
+        let model = product.insert(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast created model
         Ok(model)
@@ -48,7 +48,7 @@ impl ProductRepository {
             price: opt_to_active_value(dto.price),
             ..Default::default()
         };
-        let model = product.update(self.store().write()).await.change_context(Error::Store)?;
+        let model = product.update(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast updated model
         Ok(model)
@@ -61,7 +61,7 @@ impl ProductRepository {
             ..Default::default()
         };
 
-        let model = product.update(self.store().write()).await.change_context(Error::Store)?;
+        let model = product.update(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast updated model
         Ok(model)

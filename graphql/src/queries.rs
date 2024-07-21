@@ -4,8 +4,5 @@ pub struct Query;
 
 #[Object]
 impl Query {
-    async fn version(&self) -> &'static str { env!("CARGO_PKG_VERSION") }
-
-    async fn hello(&self) -> &'static str { "Hello, world!" }
-
+    async fn get_home(&self) -> &'static str { env!("CARGO_PKG_VERSION") }
 }

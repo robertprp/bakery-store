@@ -24,7 +24,7 @@ impl OrderRepository {
             ..Default::default()
         };
 
-        let model = order.insert(self.store().write()).await.change_context(Error::Store)?;
+        let model = order.insert(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast created model
         Ok(model)
@@ -36,7 +36,7 @@ impl OrderRepository {
             price: opt_to_active_value(dto.price),
             ..Default::default()
         };
-        let model = order.update(self.store().write()).await.change_context(Error::Store)?;
+        let model = order.update(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast updated model
         Ok(model)
@@ -45,7 +45,7 @@ impl OrderRepository {
     pub async fn find_all(&self) -> error_stack::Result<Vec<order::Model>, Error> {
         order::Entity::find()
             .order_by_desc(order::Column::UpdatedAt)
-            .all(self.store().read())
+            .all(self.0.read())
             .await
             .change_context(Error::Store)
     }
@@ -54,7 +54,7 @@ impl OrderRepository {
         order::Entity::find()
             .filter(order::Column::DeletedAt.lt(chrono::Utc::now().naive_utc()))
             .order_by_desc(order::Column::UpdatedAt)
-            .all(self.store().read())
+            .all(self.0.read())
             .await
             .change_context(Error::Store)
     }
@@ -62,7 +62,7 @@ impl OrderRepository {
     pub async fn find_by_bakery_id(&self, bakery_id: Uuid) -> error_stack::Result<Vec<order::Model>, Error> {
         order::Entity::find()
             .filter(order::Column::BakeryId.eq(bakery_id))
-            .all(self.store().read())
+            .all(self.0.read())
             .await
             .change_context(Error::Store)
     }
@@ -70,7 +70,7 @@ impl OrderRepository {
     pub async fn mark_as_deleted(&self, order: order::Model) -> error_stack::Result<order::Model, Error> {
         let mut active_model = order::ActiveModel::from(order);
         active_model.deleted_at = opt_to_active_value_opt(Some(chrono::Utc::now().naive_utc()));
-        let model = active_model.update(self.store().write()).await.change_context(Error::Store)?;
+        let model = active_model.update(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast updated model
         Ok(model)

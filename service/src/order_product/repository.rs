@@ -24,7 +24,7 @@ impl OrderProductRepository {
             ..Default::default()
         };
 
-        let model = order.insert(self.store().write()).await.change_context(Error::Store)?;
+        let model = order.insert(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast created model
         Ok(model)
@@ -38,7 +38,7 @@ impl OrderProductRepository {
             total_price: opt_to_active_value(dto.total_price),
             ..Default::default()
         };
-        let model = order.update(self.store().write()).await.change_context(Error::Store)?;
+        let model = order.update(self.0.write()).await.change_context(Error::Store)?;
 
         // should broadcast updated model
         Ok(model)

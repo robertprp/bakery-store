@@ -14,11 +14,13 @@ impl EntityName for Entity {
 }
 
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Eq, Serialize, Deserialize)]
+#[sea_orm(table_name = "event_message")]
 pub struct Model {
+    #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    pub event_type: String,
-    pub status: String,
-    pub payload: Json,
+    pub event_type: EventMessageType,
+    pub status: EventMessageStatus,
+    pub payload: serde_json::Value,
     pub created_at: DateTime,
 }
 
@@ -81,4 +83,24 @@ pub enum EventMessageStatus {
     Processed,
     #[sea_orm(string_value = "FAILED")]
     Failed,
+}
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, EnumIter, DeriveActiveEnum, Enum, Serialize, Deserialize,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(None)")]
+pub enum EventMessageType {
+    #[sea_orm(string_value = "ORDER_CREATED")]
+    OrderCreated,
+    #[sea_orm(string_value = "ORDER_UPDATED")]
+    OrderUpdated,
+    #[sea_orm(string_value = "ORDER_DELETED")]
+    OrderDeleted,
+    #[sea_orm(string_value = "PRODUCT_CREATED")]
+    ProductCreated,
+    #[sea_orm(string_value = "PRODUCT_UPDATED")]
+    ProductUpdated,
+    #[sea_orm(string_value = "PRODUCT_DELETED")]
+    ProductDeleted,
+    #[sea_orm(string_value = "PRODUCT_STOCK_UPDATED")]
+    ProductStockUpdated,
 }

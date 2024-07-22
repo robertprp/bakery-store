@@ -1,11 +1,12 @@
 use std::sync::{Arc, atomic};
 use std::sync::atomic::AtomicBool;
 use chrono::Utc;
-use error_stack::ResultExt;
+use error_stack::{IntoReport, Report, ResultExt};
 use log::info;
 use sea_orm::{ActiveEnum, ActiveModelTrait, ActiveValue, DatabaseTransaction};
 use serde::{Deserialize, Serialize};
 use tokio::task::JoinHandle;
+use entity::event_message;
 use entity::event_message::{EventMessageStatus, EventMessageType};
 use entity::prelude::EventMessage;
 use lib::error::Error;
@@ -50,12 +51,6 @@ pub struct ProductStockUpdatedEvent {
     pub product: entity::product::Model,
 }
 
-impl EventQueueService {
-    pub fn new(store: StoreService) -> Self {
-        Self { store }
-    }
-}
-
 #[derive(Clone, Serialize, Deserialize)]
 pub enum EventPayload {
     OrderCreated(OrderCreatedEvent),
@@ -91,8 +86,9 @@ impl EventQueueService {
         &self,
         payload: EventPayload,
         db_tx: &DatabaseTransaction,
-    ) -> Result<event_message::Model, Error> {
+    ) -> Result<entity::event_message::Model, Report<Error>> {
         let payload_json = serde_json::to_value(payload.clone())
+            .into_report()
             .change_context(Error::Unknown)
             .attach_printable("Failed to serialize event payload")?;
 
@@ -107,6 +103,7 @@ impl EventQueueService {
         let message = message
             .insert(db_tx)
             .await
+            .into_report()
             .change_context(Error::Unknown)?;
 
         Ok(message)

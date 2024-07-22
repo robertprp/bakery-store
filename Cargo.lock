@@ -3045,6 +3045,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "serenity",
+ "service",
  "tokio",
  "tokio-stream",
  "uuid 1.9.1",

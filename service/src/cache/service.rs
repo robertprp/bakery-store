@@ -5,7 +5,7 @@ use lib::error::Error;
 use redis::aio::MultiplexedConnection;
 use redis::Client;
 
-use crate::config::RedisConfig;
+use crate::config::redis::RedisConfig;
 
 #[derive(Clone)]
 pub struct CacheService(Client);
@@ -13,7 +13,6 @@ pub struct CacheService(Client);
 impl CacheService {
     pub fn new(config: RedisConfig) -> Result<Self, Error> {
         let client = Client::open(config.url)
-            .into_report()
             .change_context(Error::Redis)?;
 
         Ok(CacheService(client))
@@ -23,7 +22,7 @@ impl CacheService {
         self.0
             .get_multiplexed_tokio_connection()
             .await
-            .into_report()
+
             .change_context(Error::RedisConnect)
     }
 }

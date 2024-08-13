@@ -2,15 +2,16 @@ use std::sync::{Arc, atomic};
 use std::sync::atomic::AtomicBool;
 use chrono::Utc;
 use error_stack::{IntoReport, Report, ResultExt};
-use log::info;
+use log::{info, warn};
 use sea_orm::{ActiveEnum, ActiveModelTrait, ActiveValue, DatabaseTransaction};
 use serde::{Deserialize, Serialize};
 use tokio::task::JoinHandle;
 use entity::event_message;
-use entity::event_message::{EventMessageStatus, EventMessageType};
+use entity::event_message::{EventMessageStatus, EventMessageType, Model};
 use entity::prelude::EventMessage;
 use lib::error::Error;
 use crate::event_queue::repository::EventQueueRepository;
+use crate::message_broker::service::Event;
 use crate::services::Services;
 use crate::store::service::StoreService;
 
@@ -62,6 +63,20 @@ pub enum EventPayload {
     ProductStockUpdated(ProductStockUpdatedEvent),
 }
 
+impl From<EventPayload> for String {
+    fn from(value: EventPayload) -> Self {
+        match value {
+            EventPayload::OrderCreated(_) => "OrderCreated".to_string(),
+            EventPayload::OrderUpdated(_) => "OrderUpdated".to_string(),
+            EventPayload::OrderDeleted(_) => "OrderDeleted".to_string(),
+            EventPayload::ProductCreated(_) => "ProductCreated".to_string(),
+            EventPayload::ProductUpdated(_) => "ProductUpdated".to_string(),
+            EventPayload::ProductDeleted(_) => "ProductDeleted".to_string(),
+            EventPayload::ProductStockUpdated(_) => "ProductStockUpdated".to_string(),
+        }
+    }
+}
+
 impl From<EventPayload> for EventMessageType {
     fn from(value: EventPayload) -> Self {
         match value {
@@ -86,9 +101,9 @@ impl EventQueueService {
         &self,
         payload: EventPayload,
         db_tx: &DatabaseTransaction,
-    ) -> Result<entity::event_message::Model, Report<Error>> {
+    ) -> Result<entity::event_message::Model, Error> {
         let payload_json = serde_json::to_value(payload.clone())
-            .into_report()
+
             .change_context(Error::Unknown)
             .attach_printable("Failed to serialize event payload")?;
 
@@ -103,14 +118,14 @@ impl EventQueueService {
         let message = message
             .insert(db_tx)
             .await
-            .into_report()
+
             .change_context(Error::Unknown)?;
 
         Ok(message)
     }
     pub async fn update_status(
         &self,
-        message: &EventMessage,
+        message: &Model,
         status: EventMessageStatus,
     ) -> Result<(), Error> {
         let mut message = event_message::ActiveModel::from(message.clone());
@@ -128,10 +143,10 @@ impl EventQueueService {
 
 }
 
-pub async fn handle_events(services: Services, shutdown: Arc<AtomicBool>) -> JoinHandle<Result<(), Error>>{
+pub async fn handle_events(services: Services, shutdown: Arc<AtomicBool>) -> JoinHandle<()> {
     info!("Starting event queue service");
 
-    tokio::task::spawn(
+    let handlers = tokio::task::spawn(
         async move {
             let repository = EventQueueRepository::new(services.store.clone());
             let event_queue_service = services.event_queue.clone();
@@ -144,19 +159,23 @@ pub async fn handle_events(services: Services, shutdown: Arc<AtomicBool>) -> Joi
                 let messages = repository.get_pending_messages().await.unwrap();
 
                 for message in messages {
-                    let payload: EventPayload = serde_json::from_value(message.payload).unwrap();
+                    let payload: Result<EventPayload, serde_json::error::Error> = serde_json::from_value(message.payload);
 
-                    let result = match payload {
-                        Ok(EventPayload::OrderCreated(event)) => {
-                            let order_service = OrderService::new(services.store.clone());
-                            services.order_service.handle_order_created(event).await
-                        }
-                    };
+                    info!("Processing event: {:?}", String::from(payload.clone()));
+
+                    if let Err(err) = payload {
+                        warn!("Failed to deserialize event payload: {:?}", err);
+                        event_queue_service.update_status(&message, EventMessageStatus::Failed).await.unwrap();
+                        continue;
+                    }
 
                     event_queue_service.update_status(&message, EventMessageStatus::Processed).await.unwrap();
                 }
-                Ok(())
+
+                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
             }
         }
-    )
+    );
+
+    handlers
 }

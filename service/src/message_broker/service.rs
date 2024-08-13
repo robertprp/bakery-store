@@ -1,6 +1,5 @@
 use std::sync::Arc;
-use tokio::sync::broadcast::Receiver;
-use error_stack::{Report, ResultExt};
+use error_stack::{IntoReport, Report, ResultExt};
 use futures_util::StreamExt;
 use log::{info, warn};
 use redis::aio::ConnectionManager;
@@ -10,6 +9,7 @@ use tokio_stream::wrappers::BroadcastStream;
 use entity::{bakery, order, product, stock};
 use lib::error::Error;
 use crate::config::redis::RedisConfig;
+use tokio::sync::broadcast::Receiver;
 
 #[derive(Clone, Debug)]
 pub enum Event {
@@ -33,17 +33,17 @@ pub struct MessageBrokerServiceInner {
 pub struct MessageBrokerService(Arc<MessageBrokerServiceInner>);
 
 impl MessageBrokerService {
-    pub async fn new(log_target: &str, config: RedisConfig) {
+    pub async fn new(log_target: &str, config: RedisConfig) -> Result<MessageBrokerService, Error> {
         info!(target: log_target, "Connecting to redis at {}", config.url);
 
         let client = Client::open(config.url.clone())
-            .change_context(Error::Redis)?;
+            .change_context(Error::Redis).unwrap();
 
-        let connection_manager = client.get_connection_manager().await?;
+        let connection_manager = client.get_connection_manager().await.unwrap();
 
-        let (tx, rx) = tokio::sync::mpsc::channel(1_000_000);
+        let (tx, mut rx) = tokio::sync::broadcast::channel(10_000);
 
-        let mut pubsub = client.get_async_pubsub().await?;
+        let mut pubsub = client.get_async_pubsub().await.unwrap();
 
         pubsub.subscribe("bakery").await.unwrap();
         pubsub.subscribe("product").await.unwrap();
@@ -56,20 +56,23 @@ impl MessageBrokerService {
             while let Some(msg) = stream.next().await {
                 let event = Self::parse_event_message(msg, msg.get_channel_name().to_string())?;
 
-                if let Err(e) = tx.send(event) {
-                    warn!("Failed to send event: {e:?}");
-
-                    continue;
+                if let Some(event) = event {
+                    if let Err(e) = tx.send(event) {
+                        warn!("Failed to send event: {e:?}");
+                        continue;
+                    }
+                } else {
+                    warn!("Failed to parse event");
                 }
-
-                Ok(MessageBrokerService(
-                    Arc::new(MessageBrokerServiceInner {
-                        connection: connection_manager.clone(),
-                        channel: rx.clone()
-                    })
-                ))
             }
         });
+
+        Ok(MessageBrokerService(
+            Arc::new(MessageBrokerServiceInner {
+                connection: connection_manager,
+                channel: rx
+            })
+        ))
     }
 
     pub fn parse_event_message(msg: Msg, channel_name: String) -> error_stack::Result<Event, Error> {
@@ -133,20 +136,19 @@ impl MessageBrokerService {
         let mut connection = self.0.connection.clone();
 
         let msg = serde_json::to_string(&msg).unwrap();
-        connection.publish(channel, msg).await?;
+        connection.publish(channel, msg).await.unwrap();
 
         Ok(())
     }
 
-    pub async fn subscribe(&self) -> Receiver<Event> {
+    pub async fn subscribe(&self) -> impl futures::Stream<Item = Event> {
         let stream = BroadcastStream::from(self.0.channel.resubscribe());
 
         stream.filter_map(|event| {
             futures::future::ready(match event {
                 Ok(event) => Some(event),
-                _ => None
+                _ => None,
             })
         })
-
     }
 }

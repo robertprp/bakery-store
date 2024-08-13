@@ -7,6 +7,7 @@ use lib::entity::{opt_to_active_value, opt_to_active_value_opt};
 use lib::error::Error;
 use crate::order_product::dto::*;
 
+#[derive(Clone)]
 pub struct OrderProductRepository(StoreService);
 
 impl OrderProductRepository {

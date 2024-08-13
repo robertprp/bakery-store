@@ -47,6 +47,7 @@ impl <'de> Deserialize<'de> for ConfigService {
             .database(ad_hoc.database)
             .redis(ad_hoc.redis)
             .graphql(ad_hoc.graphql)
+            .jwt(ad_hoc.jwt)
             .build()
     }
 }

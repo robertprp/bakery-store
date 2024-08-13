@@ -7,6 +7,7 @@ use lib::error::Error;
 use crate::stock::dto::{CreateStockDTO, UpdateStockDTO};
 use crate::store::service::StoreService;
 
+#[derive(Clone)]
 pub struct StockRepository(StoreService);
 
 impl StockRepository {

@@ -1,5 +1,5 @@
 use error_stack::ResultExt;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryOrder};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseTransaction, EntityTrait, QueryOrder};
 use uuid::Uuid;
 use crate::store::service::StoreService;
 use entity::{order};
@@ -7,6 +7,7 @@ use lib::entity::{opt_to_active_value, opt_to_active_value_opt};
 use lib::error::Error;
 use crate::order::dto::{CreateOrderDTO, UpdateOrderDTO};
 
+#[derive(Clone)]
 pub struct OrderRepository(StoreService);
 
 impl OrderRepository {
@@ -14,7 +15,7 @@ impl OrderRepository {
         Self(store)
     }
 
-    pub async fn create(&self, dto: CreateOrderDTO) -> error_stack::Result<order::Model, Error> {
+    pub async fn create(&self, dto: CreateOrderDTO, db_tx: &DatabaseTransaction) -> error_stack::Result<order::Model, Error> {
         let bakery_id = dto.bakery_id;
 
         let order = order::ActiveModel {
@@ -24,19 +25,20 @@ impl OrderRepository {
             ..Default::default()
         };
 
-        let model = order.insert(self.0.write()).await.change_context(Error::Store)?;
+        let model = order.insert(&db_tx).await.change_context(Error::Store)?;
 
         // should broadcast created model
         Ok(model)
     }
 
-    pub async fn update(&self, dto: UpdateOrderDTO) -> error_stack::Result<order::Model, Error> {
+    pub async fn update(&self, dto: UpdateOrderDTO, db_tx: &DatabaseTransaction) -> error_stack::Result<order::Model, Error> {
         let order = order::ActiveModel {
             bakery_id: opt_to_active_value(dto.bakery_id),
             price: opt_to_active_value(dto.price),
             ..Default::default()
         };
-        let model = order.update(self.0.write()).await.change_context(Error::Store)?;
+
+        let model = order.update(db_tx).await.change_context(Error::Store)?;
 
         // should broadcast updated model
         Ok(model)

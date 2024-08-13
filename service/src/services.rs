@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use crate::cache::service::CacheService;
 use crate::config::ConfigService;
 use crate::store::service::StoreService;

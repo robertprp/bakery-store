@@ -1,7 +1,5 @@
-use async_graphql::Object;
+use async_graphql::SimpleObject;
 use rust_decimal::Decimal;
-use entity::order;
-use entity::order::Model;
 use crate::helpers::date::DateTimeHelper;
 
 pub struct ProductType(entity::product::Model);
@@ -21,7 +19,7 @@ impl ProductType {
         &self.0.name
     }
 
-    async fn price (&self) -> Decimal {
+    async fn price(&self) -> Decimal {
         self.0.price
     }
 

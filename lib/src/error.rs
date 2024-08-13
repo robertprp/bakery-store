@@ -1,4 +1,3 @@
-use ethers::types::{Address, Bytes, U256};
 // use serde_json::error::Error as SerdeError;
 use thiserror::Error;
 
@@ -82,19 +81,39 @@ pub enum Error {
     #[error("Discord error")]
     Discord,
 
-    #[error("Reqwest error")]
-    Reqwest,
+    #[error("Invalid twitter state")]
+    TwitterInvalidState,
+
+    #[error("Telegram error")]
+    Telegram,
+
+    #[error("Invalid private key")]
+    InvalidPrivateKey,
+
+    #[error("Failed to decode event")]
+    EventDecodeFailed,
+
+    #[error("Event doesn't have signature")]
+    TransformNoSignature,
+
+    #[error("Event doesn't have block number")]
+    TransformNoBlockNumber,
+
+    #[error("Event does't have related transformer")]
+    TransformUnknownSignature,
+
+    #[error("Event doesn't have transaction hash")]
+    TransformNoTransactionHash,
+
+    #[error("Event doesn't have log index")]
+    TransformNoLogIndex,
+
+    #[error("Chain provider state is not synced")]
+    ChainStateNotSynced,
+
+    #[error("Contract error")]
+    Contract,
 
     #[error("Unknown error")]
     Unknown,
-}
-
-pub struct ContractCallError {
-    pub from: Address,
-    pub to: Address,
-    pub data: Bytes,
-    pub value: U256,
-    pub gas: Option<U256>,
-    pub gas_price: Option<U256>,
-    pub message: Option<String>,
 }

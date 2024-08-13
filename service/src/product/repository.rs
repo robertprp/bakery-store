@@ -7,6 +7,7 @@ use lib::error::Error;
 use crate::product::dto::{CreateProductDTO, UpdateProductDTO};
 use crate::store::service::StoreService;
 
+#[derive(Clone)]
 pub struct ProductRepository(StoreService);
 
 impl ProductRepository {
@@ -21,7 +22,7 @@ impl ProductRepository {
 
     pub async fn find_by_id(&self, id: Uuid) -> error_stack::Result<Option<product::Model>, Error> {
         let product = product::Entity::find_by_id(id)
-            .find_opt(self.0.read())
+            .one(self.0.read())
             .await
             .change_context(Error::Store)?;
         Ok(product)

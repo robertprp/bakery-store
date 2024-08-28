@@ -56,8 +56,8 @@ impl MessageBrokerService {
             while let Some(msg) = stream.next().await {
                 let event = Self::parse_event_message(msg, msg.get_channel_name().to_string())?;
 
-                if let Some(event) = event {
-                    if let Err(e) = tx.send(event) {
+                if let Some(ev) = event {
+                    if let Err(e) = tx.send(ev) {
                         warn!("Failed to send event: {e:?}");
                         continue;
                     }

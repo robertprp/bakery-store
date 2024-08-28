@@ -1,5 +1,5 @@
 use error_stack::ResultExt;
-use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseTransaction, EntityTrait, QueryOrder};
+use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseTransaction, EntityTrait, QueryOrder, QueryFilter};
 use uuid::Uuid;
 use crate::store::service::StoreService;
 use entity::{order};
@@ -25,7 +25,7 @@ impl OrderRepository {
             ..Default::default()
         };
 
-        let model = order.insert(&db_tx).await.change_context(Error::Store)?;
+        let model = order.insert(db_tx).await.change_context(Error::Store)?;
 
         // should broadcast created model
         Ok(model)

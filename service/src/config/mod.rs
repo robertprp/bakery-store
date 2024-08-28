@@ -43,22 +43,27 @@ impl <'de> Deserialize<'de> for ConfigService {
 
         let ad_hoc: AdHocConfig = serde::Deserialize::deserialize(deserialize)?;
 
-        ConfigService::builder()
+         let config_service = ConfigService::builder()
             .database(ad_hoc.database)
             .redis(ad_hoc.redis)
             .graphql(ad_hoc.graphql)
             .jwt(ad_hoc.jwt)
-            .build()
+            .build();
+
+        config_service
     }
 }
 
 impl FromStr for ConfigService {
     type Err = Report<Error>;
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err>{
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         serde_yaml::from_str(s)
+            .into_report()
             .change_context(Error::ConfigInvalid)
     }
 }
+
 #[buildstructor::buildstructor]
 impl ConfigService {
     #[builder]
@@ -75,6 +80,7 @@ impl ConfigService {
 
     pub fn from_file(path: &Path) -> Result<Self, Error> {
         let config = fs::read_to_string(path)
+            .into_report()
             .change_context(Error::ConfigNotFound(path.to_str().unwrap().to_string()))?;
 
         config.parse()

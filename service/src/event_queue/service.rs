@@ -1,7 +1,7 @@
 use std::sync::{Arc, atomic};
 use std::sync::atomic::AtomicBool;
 use chrono::Utc;
-use error_stack::{IntoReport, Report, ResultExt};
+use error_stack::{FutureExt, IntoReport, Report, ResultExt};
 use log::{info, warn};
 use sea_orm::{ActiveEnum, ActiveModelTrait, ActiveValue, DatabaseTransaction};
 use serde::{Deserialize, Serialize};
@@ -102,10 +102,7 @@ impl EventQueueService {
         payload: EventPayload,
         db_tx: &DatabaseTransaction,
     ) -> Result<entity::event_message::Model, Error> {
-        let payload_json = serde_json::to_value(payload.clone())
-
-            .change_context(Error::Unknown)
-            .attach_printable("Failed to serialize event payload")?;
+        let payload_json = serde_json::to_value(payload.clone()).change_context(Error::Unknown)?;
 
         let message = event_message::ActiveModel {
             id: ActiveValue::Set(uuid::Uuid::new_v4()),

@@ -1,13 +1,14 @@
 pub(crate) mod start;
 pub(crate) mod version;
 
+use crate::cli::version::crate_version;
 use std::path::PathBuf;
-use clap::{Parser, Subcommand};
+use clap::{Parser, Args, Subcommand};
 
 #[derive(Parser, Clone)]
 #[command(
     name = "pushpin",
-    version = version(),
+    version = crate_version(),
     about = "GraphQL server for bakery store."
 )]
 pub struct Cli {
@@ -23,4 +24,3 @@ pub enum Commands {
     Start,
     Version
 }
-

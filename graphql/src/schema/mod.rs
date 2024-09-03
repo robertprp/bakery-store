@@ -9,7 +9,7 @@ use crate::{
     helpers::jwt::{Claims, JWT},
     mutations::Mutation,
     queries::Query,
-    subscriptions::Subscription,
+    subscriptions::SubscriptionRoot as Subscription,
 };
 use async_graphql::{Schema};
 use service::services::Services;
@@ -21,8 +21,6 @@ pub struct GQLGlobalData {
     pub services: Services,
     pub jwt: JWT,
 }
-
-impl juniper::Context for GQLGlobalData {}
 
 pub struct GQLJWTData {
     pub claims: Option<Claims>,

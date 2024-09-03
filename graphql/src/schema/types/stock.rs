@@ -19,7 +19,7 @@ impl StockType {
     }
 
     async fn product_id(&self) -> &str {
-        self.0.product_id.as_str()
+        self.0.product_id.to_string().as_str()
     }
 
     async fn quantity(&self) -> Decimal {

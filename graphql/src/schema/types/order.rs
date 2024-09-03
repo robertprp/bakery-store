@@ -20,8 +20,8 @@ impl OrderType {
         format!("{:#x}", self.0.id)
     }
 
-    async fn bakery_id(&self) -> Uuid {
-        self.0.bakery_id
+    async fn bakery_id(&self) -> &str {
+        self.0.bakery_id.to_string().as_str()
     }
 
     async fn price(&self) -> Decimal {

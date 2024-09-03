@@ -27,7 +27,8 @@ fn main() {
             cli::start::start(config)
         }
         Some(cli::Commands::Version) => {
-            cli::version::version(config)
+            let version = cli::version::crate_version();
+            info!("Version: {}", version);
         }
         None => {
             info!("No command provided.");

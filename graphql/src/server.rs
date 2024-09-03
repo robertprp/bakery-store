@@ -3,13 +3,7 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use async_graphql::{http::ALL_WEBSOCKET_PROTOCOLS, Data, ServerError};
 use async_graphql_axum::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLWebSocket};
-use axum::{
-    extract::{State, WebSocketUpgrade},
-    http::HeaderMap,
-    response::{Html, IntoResponse, Response},
-    routing::get,
-    Router, serve,
-};
+use axum::{extract::{State, WebSocketUpgrade}, http::HeaderMap, response::{Html, IntoResponse, Response}, routing::get, Router, serve::Serve as AxumServer, serve};
 use axum::handler::HandlerWithoutStateExt;
 use error_stack::{Result, ResultExt, Report};
 use lib::error::Error;
@@ -48,8 +42,7 @@ impl Server {
         Server { config }
     }
 
-    pub async fn start(self) -> error_stack::Result<(), Error> {
-
+    pub async fn start(self) -> Result<(), Error> {
         info!(
             target: LOG_TARGET,
             "Starting GraphQL, version {}",
@@ -78,14 +71,13 @@ impl Server {
             "Health-check endpoint available at {}/health", self.config.graphql.endpoint
         );
 
-        let store = StoreService::new(self.config.database.clone()).await?;
+        let store = StoreService::new(self.config.database.clone()).await.unwrap();
 
         let services = Services {
             config: self.config.clone(),
             store: store.clone(),
-            message_broker: BroadcastService::new(LOG_TARGET, self.config.redis.clone()).await?,
-            // state: StateService::new(store.clone()),
-            cache: CacheService::new(self.config.redis.clone())?,
+            message_broker: BroadcastService::new(LOG_TARGET, self.config.redis.clone()).await.unwrap(),
+            cache: CacheService::new(self.config.redis.clone()).unwrap(),
             event_queue: EventQueueService::new(store.clone()),
         };
 
@@ -93,7 +85,7 @@ impl Server {
             self.config.jwt.private_key.as_bytes(),
             self.config.jwt.public_key.as_bytes(),
         )
-        .expect("Failed to init JWT");
+            .expect("Failed to init JWT");
 
         let schema = new_schema(
             GQLGlobalData::builder()
@@ -124,11 +116,13 @@ impl Server {
                     .into_inner(),
             );
 
-        let listener = tokio::net::TcpListener::bind(&self.config.graphql.listen.parse().unwrap()).await.unwrap();
-        let app_service = app.into_make_service();
-        axum::serve(listener, app_service)
+        let listener = tokio::net::TcpListener::bind(&self.config.graphql.listen)
+            .await.change_context(Error::Unknown)?;
+
+        serve(listener, app)
             .await
-            .unwrap();
+            .map_err(|e| Report::new(e))
+            .change_context(Error::Unknown)?;
 
         Ok(())
     }

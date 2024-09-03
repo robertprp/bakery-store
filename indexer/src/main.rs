@@ -15,17 +15,8 @@ fn main() {
 
     if args.command.is_none() { error!("No command provided"); return }
 
-    let config_service = match args.config {
-        Some(path) => {
-            let path_str = path.to_str().unwrap();
-            let full_path = Path::new(path_str);
+    let config_service = ConfigService::from_file(Path::new(args.config.unwrap().to_str().unwrap_or("config.yaml"))).unwrap();
 
-            ConfigService::from_file(full_path).unwrap()
-        }
-        None => {
-            ConfigService::default()
-        }
-    };
     match args.command.unwrap() {
         Commands::Bake { product } => {
             info!("Starting bake for product: {}", product);

@@ -1,6 +1,7 @@
-use async_graphql::SimpleObject;
+use async_graphql::{SimpleObject, Object};
 use rust_decimal::Decimal;
 use crate::helpers::date::DateTimeHelper;
+
 
 pub struct ProductType(entity::product::Model);
 

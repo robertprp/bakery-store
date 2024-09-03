@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use clap::{Parser, Subcommand};
+use clap::clap_derive::{Parser, Args, Subcommand};
 
 /// Simple program to bake a product
 #[derive(Parser, Debug)]

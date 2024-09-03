@@ -13,7 +13,7 @@ pub struct StoreService {
 }
 
 impl StoreService {
-    pub async fn new(config: DatabaseConfig) -> Result<Self, Error> {
+    pub async fn new(config: DatabaseConfig) -> error_stack::Result<Self, Error> {
         let mut read_only: Vec<DatabaseConnection> = Vec::new();
         let mut read_write: Vec<DatabaseConnection> = Vec::new();
 

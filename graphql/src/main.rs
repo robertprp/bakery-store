@@ -16,7 +16,7 @@ static LOG_TARGET: &str = "graphql";
 
 fn main() {
     let default_config_file_path = Path::new("config.yaml");
-    dotenv::dotenv().ok().expect("Failed to load .env file");
+    dotenv::dotenv().ok();
     let cli = cli::Cli::parse();
 
     let config = ConfigService::from_file(cli.config.as_deref().unwrap_or(default_config_file_path)).unwrap();

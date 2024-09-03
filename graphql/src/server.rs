@@ -11,7 +11,7 @@ use axum::{
     Router, serve,
 };
 use axum::handler::HandlerWithoutStateExt;
-use error_stack::{Result, ResultExt};
+use error_stack::{Result, ResultExt, Report};
 use lib::error::Error;
 use log::{info, warn};
 use serde::Deserialize;
@@ -48,7 +48,7 @@ impl Server {
         Server { config }
     }
 
-    pub async fn start(self) -> Result<(), Error> {
+    pub async fn start(self) -> error_stack::Result<(), Error> {
 
         info!(
             target: LOG_TARGET,
@@ -86,7 +86,7 @@ impl Server {
             message_broker: BroadcastService::new(LOG_TARGET, self.config.redis.clone()).await?,
             // state: StateService::new(store.clone()),
             cache: CacheService::new(self.config.redis.clone())?,
-            event_queue: EventQueueService::new(LOG_TARGET, store.clone()),
+            event_queue: EventQueueService::new(store.clone()),
         };
 
         let jwt = JWT::new_from_pem(

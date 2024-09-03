@@ -4,7 +4,7 @@ use std::ops::Deref;
 use std::path::Path;
 use std::str::FromStr;
 use std::sync::Arc;
-use error_stack::{IntoReport, Report, ResultExt};
+use error_stack::{IntoReport, Report, ResultExt, Result};
 use serde::{Deserialize, Deserializer, Serialize};
 use lib::error::Error;
 use crate::config::database::DatabaseConfig;
@@ -28,10 +28,15 @@ pub struct ConfigServiceInner {
 #[derive(Debug, Clone, Serialize)]
 pub struct ConfigService(Arc<ConfigServiceInner>);
 
-impl <'de> Deserialize<'de> for ConfigService {
-    fn deserialize<D>(deserialize: D) -> Result<Self, D::Error>
+impl Default for ConfigService {
+    fn default() -> Self {
+        Self::from_file(Path::new("./config.yaml")).unwrap()
+    }
+}
+impl <'de> serde::Deserialize<'de> for ConfigService {
+    fn deserialize<D>(deserialize: D) -> std::result::Result<Self, D::Error>
     where
-        D: Deserializer<'de>,
+        D: serde::Deserializer<'de>,
     {
         #[derive(Deserialize, Default)]
         struct AdHocConfig {
@@ -48,7 +53,8 @@ impl <'de> Deserialize<'de> for ConfigService {
             .redis(ad_hoc.redis)
             .graphql(ad_hoc.graphql)
             .jwt(ad_hoc.jwt)
-            .build();
+            .build()
+             .map_err(|e| serde::de::Error::custom(e.to_string()));
 
         config_service
     }
@@ -58,6 +64,16 @@ impl FromStr for ConfigService {
     type Err = Report<Error>;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        // println!("{s:?}");
+
+        // match serde_yaml::from_str(s) {
+        //     Ok(config) => Ok(config),
+        //     Err(e) => {
+        //         println!("{e:?}");
+        //         return Err(Report::new(Error::ConfigInvalid));
+        //     }
+        // }
+
         serde_yaml::from_str(s)
             .into_report()
             .change_context(Error::ConfigInvalid)

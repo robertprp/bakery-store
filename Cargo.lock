@@ -1730,6 +1730,7 @@ version = "0.1.0"
 dependencies = [
  "async-graphql 6.0.11",
  "bigdecimal 0.3.1",
+ "log",
  "rand",
  "sea-orm",
  "serde",
@@ -3035,6 +3036,7 @@ dependencies = [
  "futures",
  "futures-util",
  "hex",
+ "lib",
  "log",
  "redis",
  "reqwest 0.12.5",

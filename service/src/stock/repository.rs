@@ -22,7 +22,7 @@ impl StockRepository {
 
     pub async fn find_by_id(&self, id: Uuid) -> error_stack::Result<Option<stock::Model>, Error> {
         let stock = stock::Entity::find_by_id(id)
-            .find_opt(self.0.read())
+            .one(self.0.read())
             .await
             .change_context(Error::Store)?;
         Ok(stock)

@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use error_stack::{IntoReport, Report, ResultExt};
+use error_stack::{IntoReport, Report, ResultExt, Result, FutureExt};
 use futures_util::StreamExt;
 use log::{info, warn};
 use redis::aio::ConnectionManager;
@@ -41,7 +41,7 @@ impl MessageBrokerService {
 
         let connection_manager = client.get_connection_manager().await.unwrap();
 
-        let (tx, mut rx) = tokio::sync::broadcast::channel(10_000);
+        let (tx, mut rx) = tokio::sync::broadcast::channel::<Event>(10_000);
 
         let mut pubsub = client.get_async_pubsub().await.unwrap();
 
@@ -54,15 +54,10 @@ impl MessageBrokerService {
             let mut stream = pubsub.into_on_message();
 
             while let Some(msg) = stream.next().await {
-                let event = Self::parse_event_message(msg, msg.get_channel_name().to_string())?;
-
-                if let Some(ev) = event {
-                    if let Err(e) = tx.send(ev) {
-                        warn!("Failed to send event: {e:?}");
-                        continue;
-                    }
-                } else {
-                    warn!("Failed to parse event");
+                let event = Self::parse_event_message(&msg, msg.get_channel_name().to_string());
+                if let Err(e) = tx.send(event.unwrap()) {
+                    warn!("Failed to send event: {e:?}");
+                    continue;
                 }
             }
         });
@@ -75,8 +70,8 @@ impl MessageBrokerService {
         ))
     }
 
-    pub fn parse_event_message(msg: Msg, channel_name: String) -> error_stack::Result<Event, Error> {
-        let event_payload = &msg.get_payload::<String>();
+    pub fn parse_event_message(msg: &Msg, channel_name: String) -> error_stack::Result<Event, Error> {
+        let event_payload = msg.get_payload::<String>();
         if let Err(e) = event_payload {
             warn!("Failed to get payload: {e:?}");
             return Err(Report::new(Error::Redis)).attach_printable("Failed to get payload");
@@ -136,7 +131,8 @@ impl MessageBrokerService {
         let mut connection = self.0.connection.clone();
 
         let msg = serde_json::to_string(&msg).unwrap();
-        connection.publish(channel, msg).await.unwrap();
+
+        connection.publish(channel, msg).await.change_context(Error::Redis)?;
 
         Ok(())
     }

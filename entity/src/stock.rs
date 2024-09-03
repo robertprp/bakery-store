@@ -15,7 +15,7 @@ impl EntityName for Entity {
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Eq, Serialize, Deserialize)]
 pub struct Model {
     pub id: Uuid,
-    pub product_id: Uuid,
+    pub product_id: String,
     pub quantity: Decimal,
     pub created_at: DateTime,
     pub updated_at: DateTime,

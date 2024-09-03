@@ -16,7 +16,7 @@ impl EntityName for Entity {
 pub struct Model {
     pub id: Uuid,
     pub price: Decimal,
-    pub bakery_id: Uuid,
+    pub bakery_id: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
     pub deleted_at: Option<DateTime>,

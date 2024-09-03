@@ -1,5 +1,4 @@
 use async_graphql::Object;
-use bigdecimal::ToPrimitive;
 use entity::stock;
 use crate::helpers::date::DateTimeHelper;
 use sea_orm::prelude::Decimal;
@@ -14,12 +13,8 @@ impl From<stock::Model> for StockType {
 
 #[Object]
 impl StockType {
-    async fn id(&self) -> String {
-        format!("{:#x}", self.0.id)
-    }
-
     async fn product_id(&self) -> &str {
-        self.0.product_id.to_string().as_str()
+        &self.0.product_id.
     }
 
     async fn quantity(&self) -> Decimal {

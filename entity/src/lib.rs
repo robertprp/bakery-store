@@ -7,5 +7,6 @@ pub mod product;
 pub mod event_message;
 pub mod order_product;
 pub mod stock;
+pub mod extra;
 
 

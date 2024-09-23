@@ -81,7 +81,6 @@ impl Server {
             event_queue: EventQueueService::new(store.clone()),
         };
 
-        info!("Keys {pk} and {pub} are used for JWT", pk = self.config.jwt.private_key, pub = self.config.jwt.public_key);
         let jwt = JWT::new_from_pem(
             self.config.jwt.private_key.as_bytes(),
             self.config.jwt.public_key.as_bytes(),

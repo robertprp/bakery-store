@@ -7,6 +7,7 @@ use dotenv::dotenv;
 mod cli;
 mod args;
 
+pub const LOG_TARGET: &str = "indexer";
 fn main() {
     dotenv::dotenv().ok();
     env_logger::init();
@@ -19,7 +20,6 @@ fn main() {
 
     match args.command.unwrap() {
         Commands::Bake { product } => {
-            info!("Starting bake for product: {}", product);
             cli::bake::start(config_service, product);
         }
     }

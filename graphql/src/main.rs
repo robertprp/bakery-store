@@ -23,7 +23,6 @@ fn main() {
 
     let config = ConfigService::from_file(cli.config.as_deref().unwrap_or(default_config_file_path)).unwrap();
 
-    info!("GraphQL API for Valio");
     match &cli.command {
         Some(cli::Commands::Start) => {
             info!("Welcome to the bakery GraphQL server!");

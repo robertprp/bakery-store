@@ -32,3 +32,4 @@ tokio-stream = { version = "0.1.15", features = ["sync"] }
 uuid = { version = "1.9.1", features = ["v4"] }
 service = { path = "../service" }
 lib = { path = "../lib" }
+migration = { path = "../migration" }

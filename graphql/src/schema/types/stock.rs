@@ -13,8 +13,8 @@ impl From<stock::Model> for StockType {
 
 #[Object]
 impl StockType {
-    async fn product_id(&self) -> &str {
-        &self.0.product_id.
+    async fn product_id(&self) -> String {
+        String::from(format!("{:#x}", self.0.product_id))
     }
 
     async fn quantity(&self) -> Decimal {

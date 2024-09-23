@@ -34,3 +34,13 @@ pub enum EventMessageType {
     #[sea_orm(string_value = "PRODUCT_STOCK_UPDATED")]
     ProductStockUpdated,
 }
+
+impl From<EventMessageStatus> for String {
+    fn from(value: EventMessageStatus) -> Self {
+        match value {
+            EventMessageStatus::Pending => "PENDING".to_string(),
+            EventMessageStatus::Processed => "PROCESSED".to_string(),
+            EventMessageStatus::Failed => "FAILED".to_string(),
+        }
+    }
+}

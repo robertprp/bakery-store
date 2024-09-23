@@ -1,5 +1,5 @@
 use sea_orm_migration::prelude::*;
-use entity::event_message::EventMessageStatus;
+use entity::extra::EventMessageStatus;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;

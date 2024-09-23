@@ -2,7 +2,7 @@ use entity::event_message;
 use error_stack::{Result, ResultExt};
 use lib::error::Error;
 use sea_orm::{ColumnTrait, EntityTrait, Order, QueryFilter, QueryOrder};
-use entity::event_message::EventMessageStatus;
+use entity::extra::EventMessageStatus;
 use crate::store::service::StoreService;
 
 pub struct EventQueueRepository(StoreService);

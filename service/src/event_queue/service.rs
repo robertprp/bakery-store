@@ -7,7 +7,8 @@ use sea_orm::{ActiveEnum, ActiveModelTrait, ActiveValue, DatabaseTransaction};
 use serde::{Deserialize, Serialize};
 use tokio::task::JoinHandle;
 use entity::event_message;
-use entity::event_message::{EventMessageStatus, EventMessageType, Model as EventMessageModel};
+use entity::event_message::{Model as EventMessageModel};
+use entity::extra::{EventMessageStatus, EventMessageType};
 use entity::prelude::EventMessage;
 use lib::error::Error;
 use crate::event_queue::repository::EventQueueRepository;
@@ -109,7 +110,7 @@ impl EventQueueService {
 
         let message = event_message::ActiveModel {
             id: ActiveValue::Set(uuid::Uuid::new_v4()),
-            status: ActiveValue::Set(EventMessageStatus::Pending),
+            status: ActiveValue::Set(EventMessageStatus::Pending.to_value()),
             event_type: ActiveValue::Set(payload.into()),
             payload: ActiveValue::Set(payload_json),
             created_at: ActiveValue::Set(Utc::now().naive_utc()),

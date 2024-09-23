@@ -2547,6 +2547,7 @@ dependencies = [
  "service",
  "slug",
  "tokio",
+ "tokio-stream",
  "tower",
  "tower-http",
  "twitter-v2",

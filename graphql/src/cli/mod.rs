@@ -8,7 +8,6 @@ use clap::{Parser, Args, Subcommand};
 #[derive(Parser, Clone)]
 #[command(
     name = "pushpin",
-    version = crate_version(),
     about = "GraphQL server for bakery store."
 )]
 pub struct Cli {

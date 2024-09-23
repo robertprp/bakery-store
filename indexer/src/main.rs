@@ -6,6 +6,7 @@ use crate::args::{Cli, Commands};
 use dotenv::dotenv;
 mod cli;
 mod args;
+mod tasks;
 
 pub const LOG_TARGET: &str = "indexer";
 fn main() {

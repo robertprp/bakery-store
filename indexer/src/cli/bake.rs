@@ -1,5 +1,6 @@
 use std::ops::{Add, AddAssign, SubAssign};
 use std::sync::{Arc, atomic};
+use crate::tasks;
 use std::sync::atomic::AtomicBool;
 use log::{error, info};
 use service::config::ConfigService;
@@ -48,7 +49,7 @@ pub async fn start(config: ConfigService, product: String) -> Result<(), Error> 
         event_queue: EventQueueService::new(store.clone()),
     };
     
-    let mut tasks = vec![];
+    let mut tasks_to_join = vec![];
     
     // start baking
     let bake_task: tokio::task::JoinHandle<Result<(), Error>>  = tokio::task::spawn({
@@ -57,17 +58,21 @@ pub async fn start(config: ConfigService, product: String) -> Result<(), Error> 
                 if shutdown.load(atomic::Ordering::Acquire) {
                     break;
                 }
-                info!("Baking ...");
-                
-                sleep(std::time::Duration::from_secs(3)).await;
+
             }
+            tasks::
             Ok(())
         }
     });
     
-    tasks.push(bake_task);
+    tasks_to_join.push(bake_task);
+    tasks_to_join.push(
+        services
+            .event_queue
+            .handle_events(services.clone(), shutdown.clone())
+    );
 
-    let results = try_join_all(tasks).await.change_context(Error::Unknown).unwrap();
+    let results = try_join_all(tasks_to_join).await.change_context(Error::Unknown).unwrap();
     for result in results {
         result?;
     }

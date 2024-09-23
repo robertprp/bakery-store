@@ -141,64 +141,63 @@ impl EventQueueService {
         Ok(())
     }
 
+    pub async fn handle_events(&self, services: Services, shutdown: Arc<AtomicBool>) -> JoinHandle<Result<(), Error>> {
+        info!("Starting event queue service");
 
-}
+        let handlers = tokio::task::spawn(
+            async move {
+                let repository = EventQueueRepository::new(services.store.clone());
+                let event_queue_service = services.event_queue.clone();
 
-pub async fn handle_events(services: Services, shutdown: Arc<AtomicBool>) -> JoinHandle<Result<(), Error>> {
-    info!("Starting event queue service");
+                loop {
+                    if shutdown.load(atomic::Ordering::Acquire) {
+                        break;
+                    }
 
-    let handlers = tokio::task::spawn(
-        async move {
-            let repository = EventQueueRepository::new(services.store.clone());
-            let event_queue_service = services.event_queue.clone();
+                    let messages = repository.get_pending_messages().await.unwrap();
 
-            loop {
-                if shutdown.load(atomic::Ordering::Acquire) {
-                    break;
-                }
+                    for message in messages {
+                        info!("Processing event: {:?}", EventMessageModel::from(message.clone()));
+                        let result = match serde_json::from_value::<EventPayload>(message.payload.clone()) {
+                            Ok(EventPayload::OrderCreated(event)) => {
+                                info!("Processing event: {:?}", event);
+                                let order_service = OrderService::new(services.clone());
+                                // todo: add handler
+                                // order_service.create(event).await.unwrap();
+                                Ok(())
+                            }
+                            Ok(EventPayload::OrderUpdated(event)) => {
+                                info!("Processing event: {:?}", event);
+                                event_queue_service.update_status(&message, EventMessageStatus::Processed).await.unwrap();
+                                Ok(())
+                            }
+                            Ok(_) => {
+                                Err(Report::new(Error::Unknown).attach_printable("Unknown event type"))
+                            }
+                            Err(e) => {
+                                Err(Report::from(e).change_context(Error::Unknown))
+                            }
+                        };
 
-                let messages = repository.get_pending_messages().await.unwrap();
-
-                for message in messages {
-                    info!("Processing event: {:?}", EventMessageModel::from(message.clone()));
-                    let result = match serde_json::from_value::<EventPayload>(message.payload.clone()) {
-                        Ok(EventPayload::OrderCreated(event)) => {
-                            info!("Processing event: {:?}", event);
-                            let order_service = OrderService::new(services.clone());
-                            // todo: add handler
-                            // order_service.create(event).await.unwrap();
-                            Ok(())
-                        }
-                        Ok(EventPayload::OrderUpdated(event)) => {
-                            info!("Processing event: {:?}", event);
-                            event_queue_service.update_status(&message, EventMessageStatus::Processed).await.unwrap();
-                            Ok(())
-                        }
-                        Ok(_) => {
-                            Err(Report::new(Error::Unknown).attach_printable("Unknown event type"))
-                        }
-                        Err(e) => {
-                            Err(Report::from(e).change_context(Error::Unknown))
-                        }
-                    };
-
-                    match result {
-                        Ok(_) => {
-                            event_queue_service.update_status(&message, EventMessageStatus::Processed).await?;
-                        }
-                        Err(e) => {
-                            warn!("Failed to process event: {:?}", e);
-                            event_queue_service.update_status(&message, EventMessageStatus::Failed).await?;
+                        match result {
+                            Ok(_) => {
+                                event_queue_service.update_status(&message, EventMessageStatus::Processed).await?;
+                            }
+                            Err(e) => {
+                                warn!("Failed to process event: {:?}", e);
+                                event_queue_service.update_status(&message, EventMessageStatus::Failed).await?;
+                            }
                         }
                     }
+
+                    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                 }
 
-                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                Ok(())
             }
+        );
 
-            Ok(())
-        }
-    );
-
-    handlers
+        handlers
+    }
 }
+
